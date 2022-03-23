@@ -1,44 +1,36 @@
-import { Component } from 'react'
+import { useState, useEffect } from 'react'
+import SearchBox from './components/search-box/SearchBox';
+import CardList from './components/card-list/card-list';
 
-class App extends Component {
 
-  constructor() {
-    super();
-    this.state = { monsters: [], searchTerm: '' }
-  }
+function App() {
 
-  componentDidMount() {
+  const [state, setState] = useState({
+    monsters: [], searchTerm: ''
+  })
+
+  const [filteredMoster, setFilteredMoster] = useState(state.monsters)
+
+  useEffect(() => {
     fetch('https://jsonplaceholder.typicode.com/users')
       .then((response) => response.json())
-      .then((users) => this.setState(() => ({ monsters: users })))
-  }
+      .then((users) => setState({ ...state, monsters: users }))
+  }, [])
 
-  onSerchTermChange = (e) => { this.setState({ searchTerm: e.target.value.toLocaleLowerCase() }) }
+  useEffect(() => {
+    const newFilteredMoster = state.monsters.filter(monster => monster.name.toLocaleLowerCase().includes(state.searchTerm))
+    setFilteredMoster(newFilteredMoster);
+  }, [state.monsters, state.searchTerm])
 
-  render() {
+  const onSerchTermChange = (e) => { setState({ ...state, searchTerm: e.target.value.toLocaleLowerCase() }) }
 
-    const { monsters, searchTerm } = this.state;
-
-    const filteredMoster = monsters.filter(monster => monster.name.toLocaleLowerCase().includes(searchTerm))
-
-    return (
-      <div >
-        <input
-          placeholder='Search here' value={searchTerm}
-          onChange={this.onSerchTermChange}
-        />
-
-        <br />
-
-        {filteredMoster.map((item, index) => (
-          <div key={index}>
-            <h1>{item.name}</h1>
-          </div>
-        ))}
-
-      </div>
-    );
-  }
+  return (
+    <div >
+      <SearchBox onChange={onSerchTermChange} value={state.searchTerm} />
+      <br />
+      <CardList data={filteredMoster} />
+    </div>
+  );
 }
 
 export default App;
